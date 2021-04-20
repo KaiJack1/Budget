@@ -1,8 +1,9 @@
+//Installing dependencies
 const express = require("express");
 const logger = require("morgan");
 const mongoose = require("mongoose");
 const compression = require("compression");
-
+//User port
 const PORT = 3000;
 
 const app = express();
