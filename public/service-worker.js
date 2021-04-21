@@ -5,17 +5,15 @@ const FILES_TO_CACHE = [
   "/",
   "/index.html",
   "/styles.css",
-  "/icons/icon512.png",
-  "/icons/icon192.png",
+  "/icons/icon-512x512.png",
+  "/icons/icon-192x192.png",
   "./manifest.webmanifest",
 ];
 
 // install
 self.addEventListener("install", function (evt) {
     // pre cache image data
-    evt.waitUntil(
-      caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/images"))
-      );
+    
       
     // pre cache all static assets
     evt.waitUntil(
@@ -27,22 +25,27 @@ self.addEventListener("install", function (evt) {
     self.skipWaiting();
   });
 
-  self.addEventListener("activate", function(evt) {
-    evt.waitUntil(
-      caches.keys().then(keyList => {
-        return Promise.all(
-          keyList.map(key => {
-            if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-              console.log("Removing old cache data", key);
-              return caches.delete(key);
-            }
-          })
-        );
-      })
-    );
 
-    self.clients.claim();
-  });
+  // evt.waitUntil(
+  //   caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/images"))
+  //   );
+
+  // self.addEventListener("activate", function(evt) {
+  //   evt.waitUntil(
+  //     caches.keys().then(keyList => {
+  //       return Promise.all(
+  //         keyList.map(key => {
+  //           if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+  //             console.log("Removing old cache data", key);
+  //             return caches.delete(key);
+  //           }
+  //         })
+  //       );
+  //     })
+  //   );
+
+  //   self.clients.claim();
+  // });
 
   self.addEventListener('fetch', function(evt) {
     if (evt.request.url.includes('/api/')) {
@@ -65,10 +68,21 @@ self.addEventListener("install", function (evt) {
         return;
     }
     evt.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(evt.request).then(response => {
-                return response || fetch(evt.request);
-            });
+
+        // caches.open(CACHE_NAME).then(cache => {
+        //     return cache.match(evt.request).then(response => {
+        //         return response || fetch(evt.request);
+        //     });
+        // })
+        fetch(evt.request).catch(function() {
+          return caches.match(evt.request).then(function(response) {
+            if (response) {
+              return response;
+            } else if (evt.request.headers.get("accept").includes("text/html")) {
+              // return the cached home page for all requests for html pages
+              return caches.match("/");
+            }
+          });
         })
     );
     });
